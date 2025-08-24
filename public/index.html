@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bestride Carolinas - Reserva tu viaje</title>
+  <style>
+    body{font-family:Arial,sans-serif;margin:0;padding:20px;max-width:900px}
+    h1{margin:0 0 10px}
+    .card{border:1px solid #ddd;border-radius:10px;padding:15px;margin:10px 0}
+    label{font-weight:bold;margin-top:10px;display:block}
+    input,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
+    button{background:#007bff;color:#fff;border:none;border-radius:6px;cursor:pointer}
+    button:hover{background:#0056b3}
+    #map{height:380px;width:100%;border-radius:10px;border:1px solid #333;margin-top:10px}
+  </style>
+</head>
+<body>
+  <h1>🚖 Bestride Carolinas</h1>
+  <p>Reserva tu viaje. Te confirmaremos por mensaje.</p>
+
+  <div class="card">
+    <form id="rideForm">
+      <label>Nombre</label>
+      <input type="text" id="name" placeholder="Tu nombre" required />
+
+      <label>Origen</label>
+      <input type="text" id="origin" placeholder="Ej: 123 Main St, Charlotte" required />
+
+      <label>Destino</label>
+      <input type="text" id="destination" placeholder="Ej: CLT Airport" required />
+
+      <label>Teléfono (Ej: +18035551234)</label>
+      <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" required />
+
+      <div style="display:flex;gap:10px">
+        <div style="flex:1">
+          <label>Fecha</label>
+          <input type="date" id="date" />
+        </div>
+        <div style="flex:1">
+          <label>Hora</label>
+          <input type="time" id="time" />
+        </div>
+      </div>
+
+      <button type="submit">Reservar Viaje</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div id="map"></div>
+  </div>
+
+  <script>
+    let map, directionsService, directionsRenderer;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte, NC
+        zoom: 10,
+      });
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer();
+      directionsRenderer.setMap(map);
+    }
+
+    document.getElementById("rideForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const origin = document.getElementById("origin").value.trim();
+      const destination = document.getElementById("destination").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+
+      // Mostrar ruta en el mapa
+      directionsService.route(
+        { origin, destination, travelMode: google.maps.TravelMode.DRIVING },
+        (result, status) => {
+          if (status === "OK") directionsRenderer.setDirections(result);
+        }
+      );
+
+      // Enviar la reserva al backend
+      try {
+        const resp = await fetch("/api/book", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, origin, destination, phone, date, time })
+        });
+        const data = await resp.json();
+        if (data.ok) {
+          alert("✅ Reserva enviada. Te contactaremos pronto.");
+          document.getElementById("rideForm").reset();
+        } else {
+          alert("❌ Hubo un problema al enviar la reserva.");
+        }
+      } catch (err) {
+        alert("❌ Error de red: " + err.message);
+      }
+    });
+  </script>
+
+  <!-- Google Maps API (reemplaza tu API KEY) -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap">
+  </script>
+</body>
+</html>
