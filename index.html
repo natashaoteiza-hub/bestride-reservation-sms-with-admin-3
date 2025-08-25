@@ -2,29 +2,86 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Bestride Carolinas - Book Your Ride</title>
+  <title>Bestride Reservation</title>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places" async defer></script>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { display: block; margin: 10px 0; padding: 8px; width: 300px; }
-    #map { height: 300px; width: 100%; margin-top: 20px; }
+    label { display: block; margin-top: 10px; }
+    input, button { padding: 5px; margin-top: 5px; width: 300px; }
+    #map { height: 300px; width: 100%; margin-top: 10px; }
   </style>
 </head>
 <body>
-  <h1>Bestride Carolinas - Book Your Ride</h1>
-  <form id="bookingForm">
-    <input type="text" id="name" placeholder="Your Name" required />
-    <input type="text" id="origin" placeholder="Origin" required />
-    <input type="text" id="destination" placeholder="Destination" required />
-    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" required />
-    <input type="date" id="date" required />
-    <input type="time" id="time" required />
-    <button type="submit">Book Ride</button>
+  <h1>Reserve your trip with Bestride Carolinas</h1>
+  
+  <form id="reservationForm">
+    <label for="name">Name</label>
+    <input type="text" id="name" placeholder="Your name" required>
+
+    <label for="origin">Origin</label>
+    <input type="text" id="origin" placeholder="123 Main St, Charlotte" required>
+
+    <label for="destination">Destination</label>
+    <input type="text" id="destination" placeholder="CLT Airport" required>
+
+    <label for="phone">Phone</label>
+    <input type="text" id="phone" placeholder="+1XXXXXXXXXX" required>
+
+    <label for="date">Date</label>
+    <input type="date" id="date" required>
+
+    <label for="time">Time</label>
+    <input type="time" id="time" required>
+
+    <button type="submit">Book Now</button>
   </form>
 
   <div id="map"></div>
 
   <script>
     let map;
-    let originAutocomplete, destinationAutocompl
+    let originAutocomplete;
+    let destinationAutocomplete;
 
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte default
+        zoom: 12
+      });
+
+      originAutocomplete = new google.maps.places.Autocomplete(document.getElementById('origin'));
+      destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById('destination'));
+    }
+
+    window.initMap = initMap;
+
+    document.getElementById('reservationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const reservation = {
+        name: document.getElementById('name').value,
+        origin: document.getElementById('origin').value,
+        destination: document.getElementById('destination').value,
+        phone: document.getElementById('phone').value,
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value
+      };
+
+      try {
+        const res = await fetch('/reservations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reservation)
+        });
+
+        if(res.ok) alert('Reservation submitted successfully!');
+        else alert('Failed to submit reservation.');
+
+      } catch(err) {
+        console.error(err);
+        alert('Error submitting reservation.');
+      }
+    });
+  </script>
+</body>
+</html>
