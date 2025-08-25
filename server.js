@@ -23,35 +23,4 @@ const bookingsFile = path.join(__dirname, "bookings.json");
 
 // Twilio setup
 let twilioClient;
-if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-  twilioClient = new Twilio(
-    process.env.TWILIO_ACCOUNT_SID,
-    process.env.TWILIO_AUTH_TOKEN
-  );
-}
-
-// Serve index.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// Serve admin.html
-app.get("/admin.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-// Get all bookings
-app.get("/api/bookings", (req, res) => {
-  let bookings = [];
-  if (fs.existsSync(bookingsFile)) {
-    try {
-      bookings = JSON.parse(fs.readFileSync(bookingsFile, "utf-8"));
-    } catch (err) {
-      console.error("Error reading bookings.json:", err);
-    }
-  }
-  res.json(bookings);
-});
-
-// Add a new booking
-app.post("/api/bookings", async (req, res) => {
+if (pro
