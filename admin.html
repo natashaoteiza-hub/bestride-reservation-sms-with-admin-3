@@ -1,1 +1,142 @@
-public/admin.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bestride Admin Panel</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places" async defer></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    input, button { display: block; margin: 5px 0; padding: 6px; width: 250px; }
+    #map { height: 300px; width: 100%; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Bestride Admin Panel</h1>
+
+  <h2>Reservations</h2>
+  <table id="reservationsTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Phone</th>
+        <th>Date</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Add Test Reservation</h2>
+  <form id="testForm">
+    <input type="text" id="testName" placeholder="Your Name" required />
+    <input type="text" id="testOrigin" placeholder="Origin" required />
+    <input type="text" id="testDestination" placeholder="Destination" required />
+    <input type="tel" id="testPhone" placeholder="+1XXXXXXXXXX" required />
+    <input type="date" id="testDate" required />
+    <input type="time" id="testTime" required />
+    <button type="submit">Add Reservation</button>
+  </form>
+
+  <div id="map"></div>
+
+  <script>
+    let map;
+    let markers = [];
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.2271, lng: -80.8431 },
+        zoom: 12
+      });
+      loadReservations();
+    }
+
+    async function loadReservations() {
+      try {
+        const res = await fetch("/api/bookings");
+        const data = await res.json();
+        const tbody = document.querySelector("#reservationsTable tbody");
+        tbody.innerHTML = "";
+        markers.forEach(m => m.setMap(null));
+        markers = [];
+
+        data.forEach(booking => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${booking.name}</td>
+            <td>${booking.origin}</td>
+            <td>${booking.destination}</td>
+            <td>${booking.phone}</td>
+            <td>${booking.date}</td>
+            <td>${booking.time}</td>
+          `;
+          tbody.appendChild(tr);
+
+          // Add markers for origin and destination
+          const geocoder = new google.maps.Geocoder();
+          geocoder.geocode({ address: booking.origin }, (results, status) => {
+            if (status === "OK") {
+              const marker = new google.maps.Marker({
+                map,
+                position: results[0].geometry.location,
+                title: "Origin: " + booking.name
+              });
+              markers.push(marker);
+            }
+          });
+          geocoder.geocode({ address: booking.destination }, (results, status) => {
+            if (status === "OK") {
+              const marker = new google.maps.Marker({
+                map,
+                position: results[0].geometry.location,
+                title: "Destination: " + booking.name
+              });
+              markers.push(marker);
+            }
+          });
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const form = document.getElementById("testForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("testName").value,
+        origin: document.getElementById("testOrigin").value,
+        destination: document.getElementById("testDestination").value,
+        phone: document.getElementById("testPhone").value,
+        date: document.getElementById("testDate").value,
+        time: document.getElementById("testTime").value
+      };
+
+      try {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert("Reservation added!");
+          loadReservations();
+        } else {
+          alert("Error: " + result.error);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Server error");
+      }
+    });
+
+    window.initMap = initMap;
+  </script>
+</body>
+</html>
+
