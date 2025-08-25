@@ -1,83 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Bestride Carolinas - Book Your Ride</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bestride Reservation</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY&libraries=places"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    input, button { padding: 8px; margin: 4px 0; width: 100%; max-width: 400px; }
-    #map { height: 400px; margin-top: 20px; }
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    form { max-width: 400px; margin: auto; display: flex; flex-direction: column; gap: 10px; }
+    input, button { padding: 10px; font-size: 16px; }
+    #map { height: 300px; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h1>Bestride Carolinas</h1>
-  <p>Book your ride. We will confirm via SMS.</p>
+  <h1>Reserve your trip with Bestride Carolinas</h1>
 
-  <form id="bookingForm">
-    <input type="text" id="name" placeholder="Your name" required>
-    <input type="text" id="origin" placeholder="e.g., 123 Main St, Charlotte" required>
-    <input type="text" id="destination" placeholder="e.g., CLT Airport" required>
-    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" required>
-    <input type="date" id="date" required>
-    <input type="time" id="time" required>
-    <button type="submit">Book Ride</button>
+  <form id="reservationForm">
+    <input type="text" id="name" placeholder="Your name" required />
+    <input type="text" id="origin" placeholder="Enter pickup location" required />
+    <input type="text" id="destination" placeholder="Enter destination" required />
+    <input type="text" id="phone" placeholder="+1XXXXXXXXXX" required />
+    <input type="date" id="date" required />
+    <input type="time" id="time" required />
+    <button type="submit">Book Now</button>
   </form>
 
   <div id="map"></div>
 
   <script>
-    let map;
-    let originAutocomplete, destinationAutocomplete;
-    let originMarker;
+    let map, originAutocomplete, destinationAutocomplete;
 
     function initMap() {
-      map = new google.maps.Map(document.getElementById('map'), {
-        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte by default
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte, NC
         zoom: 10
       });
 
-      const originInput = document.getElementById('origin');
-      const destinationInput = document.getElementById('destination');
+      const originInput = document.getElementById("origin");
+      const destinationInput = document.getElementById("destination");
 
       originAutocomplete = new google.maps.places.Autocomplete(originInput);
       destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput);
-
-      originAutocomplete.addListener('place_changed', () => {
-        const place = originAutocomplete.getPlace();
-        if (!place.geometry) return;
-        if (originMarker) originMarker.setMap(null);
-        originMarker = new google.maps.Marker({
-          position: place.geometry.location,
-          map: map,
-          title: 'Origin'
-        });
-        map.setCenter(place.geometry.location);
-        map.setZoom(12);
-      });
     }
 
-    const reservations = [];
-
-    document.getElementById('bookingForm').addEventListener('submit', e => {
+    document.querySelector("#reservationForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const reservation = {
-        name: document.getElementById('name').value,
-        origin: document.getElementById('origin').value,
-        destination: document.getElementById('destination').value,
-        phone: document.getElementById('phone').value,
-        date: document.getElementById('date').value,
-        time: document.getElementById('time').value
+
+      const booking = {
+        name: document.getElementById("name").value,
+        origin: document.getElementById("origin").value,
+        destination: document.getElementById("destination").value,
+        phone: document.getElementById("phone").value,
+        date: document.getElementById("date").value,
+        time: document.getElementById("time").value
       };
-      reservations.push(reservation);
-      alert('Reservation added successfully!');
+
+      await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(booking)
+      });
+
+      alert("✅ Reservation submitted!");
       e.target.reset();
     });
 
-    window.initMap = initMap;
-  </script>
-
-  <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places&callback=initMap">
+    window.onload = initMap;
   </script>
 </body>
 </html>
