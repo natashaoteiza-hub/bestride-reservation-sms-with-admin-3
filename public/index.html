@@ -1,31 +1,108 @@
-<h1>Book your ride with Bestride Carolinas</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bestride Carolinas - Book Your Ride</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form {
+      max-width: 500px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      border: none;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    #map {
+      height: 400px;
+      width: 100%;
+      margin-top: 30px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <h1>Book your ride with Bestride Carolinas</h1>
 
-<form>
-  <label for="name">Name</label>
-  <input type="text" id="name" placeholder="John Doe">
+  <form>
+    <label for="name">Name</label>
+    <input type="text" id="name" placeholder="John Doe" />
 
-  <label for="origin">Pickup Location</label>
-  <input type="text" id="origin" placeholder="123 Main St, Charlotte">
+    <label for="origin">Pickup Location</label>
+    <input type="text" id="origin" placeholder="123 Main St, Charlotte" />
 
-  <label for="destination">Drop-off Location</label>
-  <input type="text" id="destination" placeholder="CLT Airport">
+    <label for="destination">Drop-off Location</label>
+    <input type="text" id="destination" placeholder="CLT Airport" />
 
-  <label for="phone">Phone</label>
-  <input type="tel" id="phone" placeholder="+1XXXXXXXXXX">
+    <label for="phone">Phone</label>
+    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" />
 
-  <label for="date">Date</label>
-  <input type="text" id="date" placeholder="dd/mm/yyyy">
+    <label for="date">Date</label>
+    <input type="text" id="date" placeholder="dd/mm/yyyy" />
 
-  <label for="time">Time</label>
-  <input type="time" id="time">
+    <label for="time">Time</label>
+    <input type="time" id="time" />
 
-  <button type="submit">Book Ride</button>
-</form>
+    <button type="submit">Book Ride</button>
+  </form>
 
-<!-- Google Maps -->
-<div id="map" style="height:400px;width:100%;"></div>
+  <!-- Google Maps container -->
+  <div id="map"></div>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+  <!-- Google Maps script -->
+  <script>
+    function initMap() {
+      const charlotte = { lat: 35.2271, lng: -80.8431 }; // Charlotte, NC
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: charlotte,
+      });
+      new google.maps.Marker({
+        position: charlotte,
+        map: map,
+        title: "Charlotte, NC",
+      });
+    }
+  </script>
 
-
-
+  <!-- Load Google Maps API (replace with your API Key) -->
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH71rHRLoCFfaFTr1JB3DzsFPpDU&callback=initMap&libraries=places">
+  </script>
+</body>
+</html>
