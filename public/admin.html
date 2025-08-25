@@ -5,20 +5,17 @@
   <title>Bestride Admin Panel</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { margin-bottom: 20px; }
     table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    #map { height: 400px; width: 100%; margin-top: 20px; }
-    input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-    .form-container { max-width: 500px; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    input, button { padding: 6px; margin: 4px 0; width: 100%; max-width: 400px; }
+    #map { height: 400px; margin-top: 20px; }
   </style>
 </head>
 <body>
   <h1>Bestride Admin Panel</h1>
 
   <h2>Reservations</h2>
-  <table id="reservations-table">
+  <table id="reservationsTable">
     <thead>
       <tr>
         <th>Name</th>
@@ -29,99 +26,89 @@
         <th>Time</th>
       </tr>
     </thead>
-    <tbody>
-      <!-- Reservations will be added here -->
-    </tbody>
+    <tbody></tbody>
   </table>
 
-  <div class="form-container">
-    <h2>Add Test Reservation</h2>
-    <input type="text" id="name" placeholder="Your name" />
-    <input type="text" id="origin" placeholder="123 Main St, Charlotte" />
-    <input type="text" id="destination" placeholder="CLT Airport" />
-    <input type="text" id="phone" placeholder="+1XXXXXXXXXX" />
-    <input type="date" id="date" />
-    <input type="time" id="time" />
-    <button id="add-reservation">Add Reservation</button>
-  </div>
+  <h2>Add Test Reservation</h2>
+  <form id="adminForm">
+    <input type="text" id="adminName" placeholder="Your name" required>
+    <input type="text" id="adminOrigin" placeholder="Origin" required>
+    <input type="text" id="adminDestination" placeholder="Destination" required>
+    <input type="tel" id="adminPhone" placeholder="+1XXXXXXXXXX" required>
+    <input type="date" id="adminDate" required>
+    <input type="time" id="adminTime" required>
+    <button type="submit">Add Reservation</button>
+  </form>
 
   <div id="map"></div>
 
   <script>
     let map;
-    let markers = [];
-    
+    let marker;
+    let originAutocomplete, destinationAutocomplete;
+
+    const reservations = [];
+
     function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 35.2271, lng: -80.8431 },
         zoom: 10
       });
-      loadReservations();
+
+      originAutocomplete = new google.maps.places.Autocomplete(document.getElementById('adminOrigin'));
+      destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById('adminDestination'));
     }
 
-    function loadReservations() {
-      fetch('/bookings.json')
-        .then(res => res.json())
-        .then(data => {
-          const tableBody = document.querySelector("#reservations-table tbody");
-          tableBody.innerHTML = "";
-          markers.forEach(marker => marker.setMap(null));
-          markers = [];
-
-          data.forEach(reservation => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${reservation.name}</td>
-              <td>${reservation.origin}</td>
-              <td>${reservation.destination}</td>
-              <td>${reservation.phone}</td>
-              <td>${reservation.date}</td>
-              <td>${reservation.time}</td>
-            `;
-            tableBody.appendChild(row);
-
-            if(reservation.originLat && reservation.originLng){
-              const marker = new google.maps.Marker({
-                position: { lat: parseFloat(reservation.originLat), lng: parseFloat(reservation.originLng) },
-                map: map,
-                title: reservation.name
-              });
-              markers.push(marker);
-            }
-          });
-        });
+    function addReservationToTable(res) {
+      const tbody = document.querySelector('#reservationsTable tbody');
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${res.name}</td>
+        <td>${res.origin}</td>
+        <td>${res.destination}</td>
+        <td>${res.phone}</td>
+        <td>${res.date}</td>
+        <td>${res.time}</td>
+      `;
+      tbody.appendChild(row);
     }
 
-    function geocodeAddress(address, callback) {
+    document.getElementById('adminForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const reservation = {
+        name: document.getElementById('adminName').value,
+        origin: document.getElementById('adminOrigin').value,
+        destination: document.getElementById('adminDestination').value,
+        phone: document.getElementById('adminPhone').value,
+        date: document.getElementById('adminDate').value,
+        time: document.getElementById('adminTime').value
+      };
+      reservations.push(reservation);
+      addReservationToTable(reservation);
+
+      // Center map on origin
       const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address }, function(results, status) {
-        if (status === 'OK') {
-          const location = results[0].geometry.location;
-          callback(location.lat(), location.lng());
-        } else {
-          alert('Geocode was not successful for: ' + address + ' - ' + status);
+      geocoder.geocode({ address: reservation.origin }, (results, status) => {
+        if (status === "OK") {
+          if (marker) marker.setMap(null);
+          marker = new google.maps.Marker({
+            map: map,
+            position: results[0].geometry.location,
+            title: reservation.origin
+          });
+          map.setCenter(results[0].geometry.location);
+          map.setZoom(12);
         }
       });
-    }
 
-    document.getElementById("add-reservation").addEventListener("click", () => {
-      const name = document.getElementById("name").value;
-      const origin = document.getElementById("origin").value;
-      const destination = document.getElementById("destination").value;
-      const phone = document.getElementById("phone").value;
-      const date = document.getElementById("date").value;
-      const time = document.getElementById("time").value;
-
-      if(!name || !origin || !destination) { alert("Please fill in required fields."); return; }
-
-      geocodeAddress(origin, (originLat, originLng) => {
-        // Add reservation to bookings.json via your server here
-        // For testing, we'll just reload the table
-        loadReservations();
-      });
+      e.target.reset();
     });
+
+    window.initMap = initMap;
   </script>
 
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places&callback=initMap"></script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places&callback=initMap">
+  </script>
 </body>
 </html>
