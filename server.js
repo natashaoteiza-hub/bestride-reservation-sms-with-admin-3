@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 // Twilio credentials from environment variables
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhone = process.env.TWILIO_PHONE;
+const twilioPhone = process.env.TWILIO_PHONE_NUMBER;
 
 if (!accountSid || !authToken || !twilioPhone) {
   console.error("❌ Missing Twilio credentials in environment variables");
@@ -59,7 +59,7 @@ app.post("/api/bookings", async (req, res) => {
     // Send SMS confirmation
     if (booking.phone && accountSid && authToken && twilioPhone) {
       await client.messages.create({
-        body: `🚖 Your ride from ${booking.origin} to ${booking.destination} on ${booking.date} at ${booking.time} has been booked. Thank you for choosing Bestride Carolinas!`,
+        body: `🚖 Your ride from ${booking.pickup} to ${booking.dropoff} on ${booking.date} at ${booking.time} has been booked. Thank you for choosing Bestride Carolinas!`,
         from: twilioPhone,
         to: booking.phone,
       });
@@ -72,8 +72,12 @@ app.post("/api/bookings", async (req, res) => {
   }
 });
 
+// Serve index.html on root
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
-
