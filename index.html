@@ -1,2 +1,30 @@
-public/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bestride Carolinas - Book Your Ride</title>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places" async defer></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { display: block; margin: 10px 0; padding: 8px; width: 300px; }
+    #map { height: 300px; width: 100%; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Bestride Carolinas - Book Your Ride</h1>
+  <form id="bookingForm">
+    <input type="text" id="name" placeholder="Your Name" required />
+    <input type="text" id="origin" placeholder="Origin" required />
+    <input type="text" id="destination" placeholder="Destination" required />
+    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" required />
+    <input type="date" id="date" required />
+    <input type="time" id="time" required />
+    <button type="submit">Book Ride</button>
+  </form>
+
+  <div id="map"></div>
+
+  <script>
+    let map;
+    let originAutocomplete, destinationAutocompl
 
