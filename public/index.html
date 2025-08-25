@@ -1,3 +1,31 @@
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH71rHRLoCFfaFTr1JB3DzsFPpDU&libraries=places"></script>
+<h1>Book your ride with Bestride Carolinas</h1>
+
+<form>
+  <label for="name">Name</label>
+  <input type="text" id="name" placeholder="John Doe">
+
+  <label for="origin">Pickup Location</label>
+  <input type="text" id="origin" placeholder="123 Main St, Charlotte">
+
+  <label for="destination">Drop-off Location</label>
+  <input type="text" id="destination" placeholder="CLT Airport">
+
+  <label for="phone">Phone</label>
+  <input type="tel" id="phone" placeholder="+1XXXXXXXXXX">
+
+  <label for="date">Date</label>
+  <input type="text" id="date" placeholder="dd/mm/yyyy">
+
+  <label for="time">Time</label>
+  <input type="time" id="time">
+
+  <button type="submit">Book Ride</button>
+</form>
+
+<!-- Google Maps -->
+<div id="map" style="height:400px;width:100%;"></div>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places"></script>
+
 
 
