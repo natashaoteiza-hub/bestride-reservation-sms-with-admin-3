@@ -28,4 +28,51 @@
     <label for="dropoff">Destino</label>
     <input type="text" id="dropoff" placeholder="Ej: CLT Airport" required />
 
-    <label fo
+    <label for="phone">Teléfono</label>
+    <input type="text" id="phone" placeholder="+1XXXXXXXXXX" required />
+
+    <label for="date">Fecha</label>
+    <input type="date" id="date" required />
+
+    <label for="time">Hora</label>
+    <input type="time" id="time" required />
+
+    <button type="submit">Reservar Viaje</button>
+  </form>
+
+  <div id="map"></div>
+
+  <script>
+    // Hacer initMap global para Google Maps
+    window.initMap = function() {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte, NC
+        zoom: 12
+      });
+    };
+
+    // Form submission (simulado para no depender de API que da 401)
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const booking = {
+        name: document.getElementById("name").value,
+        pickup: document.getElementById("pickup").value,
+        dropoff: document.getElementById("dropoff").value,
+        phone: document.getElementById("phone").value,
+        date: document.getElementById("date").value,
+        time: document.getElementById("time").value
+      };
+
+      // Simulamos la reserva sin backend
+      console.log("Reserva simulada:", booking);
+      alert("¡Reserva creada con éxito (simulada)!");
+
+      // Limpiar formulario
+      document.getElementById("bookingForm").reset();
+    });
+  </script>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsDPu&callback=initMap" async defer></script>
+</body>
+</html>
+
