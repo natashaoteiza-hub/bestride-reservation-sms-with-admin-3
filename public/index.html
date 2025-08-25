@@ -1,108 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bestride Carolinas - Book Your Ride</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      padding: 0;
-      background-color: #f9f9f9;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    form {
-      max-width: 500px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-    button {
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 20px;
-      border: none;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    #map {
-      height: 400px;
-      width: 100%;
-      margin-top: 30px;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bestride Reservation</title>
+  <link rel="stylesheet" href="styles.css"> <!-- Si tienes CSS separado -->
 </head>
 <body>
-  <h1>Book your ride with Bestride Carolinas</h1>
-
-  <form>
+  <h1>Reserve your ride with Bestride Carolinas</h1>
+  
+  <form id="reservationForm">
     <label for="name">Name</label>
-    <input type="text" id="name" placeholder="John Doe" />
+    <input type="text" id="name" name="name" placeholder="Your name" required>
 
-    <label for="origin">Pickup Location</label>
-    <input type="text" id="origin" placeholder="123 Main St, Charlotte" />
+    <label for="origin">Origin</label>
+    <input type="text" id="origin" name="origin" placeholder="123 Main St, Charlotte" required>
 
-    <label for="destination">Drop-off Location</label>
-    <input type="text" id="destination" placeholder="CLT Airport" />
+    <label for="destination">Destination</label>
+    <input type="text" id="destination" name="destination" placeholder="CLT Airport" required>
 
     <label for="phone">Phone</label>
-    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" />
+    <input type="tel" id="phone" name="phone" placeholder="+1XXXXXXXXXX" required>
 
     <label for="date">Date</label>
-    <input type="text" id="date" placeholder="dd/mm/yyyy" />
+    <input type="date" id="date" name="date" required>
 
     <label for="time">Time</label>
-    <input type="time" id="time" />
+    <input type="time" id="time" name="time" required>
 
     <button type="submit">Book Ride</button>
   </form>
 
-  <!-- Google Maps container -->
-  <div id="map"></div>
+  <div id="map" style="width:100%;height:400px;margin-top:20px;"></div>
 
-  <!-- Google Maps script -->
   <script>
     function initMap() {
-      const charlotte = { lat: 35.2271, lng: -80.8431 }; // Charlotte, NC
+      const defaultLocation = { lat: 35.2271, lng: -80.8431 }; // Charlotte, NC
       const map = new google.maps.Map(document.getElementById("map"), {
         zoom: 12,
-        center: charlotte,
+        center: defaultLocation
       });
-      new google.maps.Marker({
-        position: charlotte,
-        map: map,
-        title: "Charlotte, NC",
+      const marker = new google.maps.Marker({
+        position: defaultLocation,
+        map: map
       });
     }
   </script>
 
-  <!-- Load Google Maps API (replace with your API Key) -->
   <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH71rHRLoCFfaFTr1JB3DzsFPpDU&callback=initMap&libraries=places">
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places&callback=initMap">
   </script>
+  
+  <script src="script.js"></script> <!-- Si tienes JS separado para enviar reservas -->
 </body>
 </html>
+
