@@ -2,56 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bestride Reservation</title>
-  <link rel="stylesheet" href="styles.css"> <!-- Si tienes CSS separado -->
+  <title>Bestride Carolinas - Book Your Ride</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    input, button { padding: 8px; margin: 4px 0; width: 100%; max-width: 400px; }
+    #map { height: 400px; margin-top: 20px; }
+  </style>
 </head>
 <body>
-  <h1>Reserve your ride with Bestride Carolinas</h1>
-  
-  <form id="reservationForm">
-    <label for="name">Name</label>
-    <input type="text" id="name" name="name" placeholder="Your name" required>
+  <h1>Bestride Carolinas</h1>
+  <p>Book your ride. We will confirm via SMS.</p>
 
-    <label for="origin">Origin</label>
-    <input type="text" id="origin" name="origin" placeholder="123 Main St, Charlotte" required>
-
-    <label for="destination">Destination</label>
-    <input type="text" id="destination" name="destination" placeholder="CLT Airport" required>
-
-    <label for="phone">Phone</label>
-    <input type="tel" id="phone" name="phone" placeholder="+1XXXXXXXXXX" required>
-
-    <label for="date">Date</label>
-    <input type="date" id="date" name="date" required>
-
-    <label for="time">Time</label>
-    <input type="time" id="time" name="time" required>
-
+  <form id="bookingForm">
+    <input type="text" id="name" placeholder="Your name" required>
+    <input type="text" id="origin" placeholder="e.g., 123 Main St, Charlotte" required>
+    <input type="text" id="destination" placeholder="e.g., CLT Airport" required>
+    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" required>
+    <input type="date" id="date" required>
+    <input type="time" id="time" required>
     <button type="submit">Book Ride</button>
   </form>
 
-  <div id="map" style="width:100%;height:400px;margin-top:20px;"></div>
+  <div id="map"></div>
 
   <script>
+    let map;
+    let originAutocomplete, destinationAutocomplete;
+    let originMarker;
+
     function initMap() {
-      const defaultLocation = { lat: 35.2271, lng: -80.8431 }; // Charlotte, NC
-      const map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 12,
-        center: defaultLocation
+      map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte by default
+        zoom: 10
       });
-      const marker = new google.maps.Marker({
-        position: defaultLocation,
-        map: map
+
+      const originInput = document.getElementById('origin');
+      const destinationInput = document.getElementById('destination');
+
+      originAutocomplete = new google.maps.places.Autocomplete(originInput);
+      destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput);
+
+      originAutocomplete.addListener('place_changed', () => {
+        const place = originAutocomplete.getPlace();
+        if (!place.geometry) return;
+        if (originMarker) originMarker.setMap(null);
+        originMarker = new google.maps.Marker({
+          position: place.geometry.location,
+          map: map,
+          title: 'Origin'
+        });
+        map.setCenter(place.geometry.location);
+        map.setZoom(12);
       });
     }
+
+    const reservations = [];
+
+    document.getElementById('bookingForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const reservation = {
+        name: document.getElementById('name').value,
+        origin: document.getElementById('origin').value,
+        destination: document.getElementById('destination').value,
+        phone: document.getElementById('phone').value,
+        date: document.getElementById('date').value,
+        time: document.getElementById('time').value
+      };
+      reservations.push(reservation);
+      alert('Reservation added successfully!');
+      e.target.reset();
+    });
+
+    window.initMap = initMap;
   </script>
 
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places&callback=initMap">
   </script>
-  
-  <script src="script.js"></script> <!-- Si tienes JS separado para enviar reservas -->
 </body>
 </html>
-
