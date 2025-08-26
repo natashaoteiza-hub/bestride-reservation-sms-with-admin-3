@@ -2,76 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Bestride Reservation</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AlzaSyDLW2JAH7lrHRLoCFfaFTr1JB3DzsFPpDU&libraries=places"></script>
-  <style>
-    #map { height: 300px; width: 100%; margin-top: 10px; }
-    form { max-width: 500px; margin: auto; }
-    input, button { width: 100%; padding: 8px; margin: 5px 0; }
-  </style>
+  <title>Bestride Carolinas - Book Your Trip</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AlzaSyDLW2JAH7lrHRLoCFfaFTr1JB3DzsFPpDU&libraries=places"></script>
 </head>
 <body>
   <h1>Reserve your trip with Bestride Carolinas</h1>
   <form id="bookingForm">
-    <input type="text" id="name" placeholder="Your name" required />
-    <input type="text" id="origin" placeholder="Origin" required />
-    <input type="text" id="destination" placeholder="Destination" required />
-    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" required />
-    <input type="date" id="date" required />
-    <input type="time" id="time" required />
-    <button type="submit">Book Now</button>
+    <label>Name: <input type="text" name="name" required></label><br>
+    <label>Origin: <input type="text" id="origin" name="origin" required></label><br>
+    <label>Destination: <input type="text" id="destination" name="destination" required></label><br>
+    <label>Phone: <input type="tel" name="phone" required></label><br>
+    <label>Date: <input type="date" name="date" required></label><br>
+    <label>Time: <input type="time" name="time" required></label><br>
+    <p>Estimated Price: $<span id="price">0.00</span></p>
+    <button type="submit">Book & Pay</button>
   </form>
-  <div id="map"></div>
 
   <script>
-    let map, originAutocomplete, destinationAutocomplete;
+    const originInput = document.getElementById('origin');
+    const destinationInput = document.getElementById('destination');
+    const priceSpan = document.getElementById('price');
+    const bookingForm = document.getElementById('bookingForm');
 
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte, NC
-        zoom: 12
-      });
+    const originAutocomplete = new google.maps.places.Autocomplete(originInput);
+    const destAutocomplete = new google.maps.places.Autocomplete(destinationInput);
 
-      const originInput = document.getElementById("origin");
-      const destinationInput = document.getElementById("destination");
+    async function calculateDistancePrice() {
+      const origin = originInput.value;
+      const destination = destinationInput.value;
+      if (!origin || !destination) return 0;
 
-      originAutocomplete = new google.maps.places.Autocomplete(originInput);
-      destinationAutocomplete = new google.maps.places.Autocomplete(destinationInput);
-    }
-
-    window.onload = initMap;
-
-    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const data = {
-        name: document.getElementById("name").value,
-        origin: document.getElementById("origin").value,
-        destination: document.getElementById("destination").value,
-        phone: document.getElementById("phone").value,
-        date: document.getElementById("date").value,
-        time: document.getElementById("time").value
-      };
-
-      try {
-        const res = await fetch("/api/bookings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
-
-        const result = await res.json();
-        if (result.success) {
-          alert("Booking confirmed! Check your phone for SMS.");
-          document.getElementById("bookingForm").reset();
-        } else {
-          alert("Error: " + result.error);
-        }
-      } catch (err) {
-        alert("Server error, please try again.");
-        console.error(err);
-      }
-    });
-  </script>
-</body>
-</html>
+      const apiKey = "AlzaSyDLW2JAH7lrHRLoCFfaFTr1JB3DzsFPpDU";
+      const res = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&key=${apiKey}`);
+      const dat
