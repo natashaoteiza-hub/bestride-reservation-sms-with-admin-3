@@ -1,158 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Bestride Carolinas Reservation</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f4f4f4;
-    }
-    header {
-      background: #007bff;
-      color: white;
-      text-align: center;
-      padding: 1rem;
-      font-size: 1.2rem;
-    }
-    form {
-      max-width: 600px;
-      margin: 20px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
-    }
-    label {
-      display: block;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      width: 100%;
-      font-size: 1rem;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    #map {
-      height: 400px;
-      width: 100%;
-      margin-top: 20px;
-      border-radius: 10px;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Bestride Carolinas - Reserve</title>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
-  <header>
-    Reserve your trip with Bestride Carolinas
-  </header>
+  <h1>Reserve your trip with Bestride Carolinas</h1>
 
   <form id="bookingForm">
-    <label>Your name</label>
-    <input type="text" name="name" required />
-
-    <label>Origin</label>
-    <input type="text" id="origin" name="origin" required />
-
-    <label>Destination</label>
-    <input type="text" id="destination" name="destination" required />
-
-    <label>Phone</label>
-    <input type="tel" name="phone" placeholder="+1XXXXXXXXXX" required />
-
-    <label>Date</label>
-    <input type="date" name="date" required />
-
-    <label>Time</label>
-    <input type="time" name="time" required />
-
+    <input type="text" id="name" placeholder="Your name" required /><br>
+    <input type="text" id="origin" placeholder="Origin" required /><br>
+    <input type="text" id="destination" placeholder="Destination" required /><br>
+    <input type="tel" id="phone" placeholder="+1XXXXXXXXXX" required /><br>
+    <input type="date" id="date" required /><br>
+    <input type="time" id="time" required /><br>
     <button type="submit">Book Now</button>
   </form>
 
-  <div id="map"></div>
+  <div id="result"></div>
+  <div id="card-element"></div>
+  <button id="payBtn" style="display:none;">Pay</button>
 
   <script>
-    let map, directionsService, directionsRenderer;
-
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 35.2271, lng: -80.8431 }, // Charlotte, NC
-        zoom: 10,
-      });
-      directionsService = new google.maps.DirectionsService();
-      directionsRenderer = new google.maps.DirectionsRenderer();
-      directionsRenderer.setMap(map);
-
-      const originInput = document.getElementById("origin");
-      const destinationInput = document.getElementById("destination");
-
-      const autocompleteOrigin = new google.maps.places.Autocomplete(originInput);
-      const autocompleteDestination = new google.maps.places.Autocomplete(destinationInput);
-
-      autocompleteOrigin.bindTo("bounds", map);
-      autocompleteDestination.bindTo("bounds", map);
-    }
+    const stripe = Stripe("pk_test_xxxxxxxxxxxxx"); // ⚠️ Reemplaza con tu Publishable Key de Stripe
+    let clientSecret;
 
     document.getElementById("bookingForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const formData = Object.fromEntries(new FormData(e.target).entries());
+      const booking = {
+        name: document.getElementById("name").value,
+        origin: document.getElementById("origin").value,
+        destination: document.getElementById("destination").value,
+        phone: document.getElementById("phone").value,
+        date: document.getElementById("date").value,
+        time: document.getElementById("time").value,
+      };
 
-      try {
-        const res = await fetch("/api/bookings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
-        const data = await res.json();
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(booking),
+      });
 
-        if (data.success) {
-          alert("✅ Reservation confirmed! You will receive an SMS shortly.");
-          e.target.reset();
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById("result").innerText = "❌ Error: " + data.error;
+        return;
+      }
 
-          // Draw route on map
-          directionsService.route(
-            {
-              origin: formData.origin,
-              destination: formData.destination,
-              travelMode: "DRIVING",
-            },
-            (result, status) => {
-              if (status === "OK") {
-                directionsRenderer.setDirections(result);
-              } else {
-                alert("Could not display route: " + status);
-              }
-            }
-          );
-        } else {
-          alert("❌ Error: " + (data.error || "Something went wrong"));
+      document.getElementById("result").innerText = 
+        `✅ Distance: ${data.miles} miles | Fare: $${data.price}`;
+      
+      clientSecret = data.clientSecret;
+
+      // Show payment button
+      document.getElementById("payBtn").style.display = "block";
+    });
+
+    document.getElementById("payBtn").addEventListener("click", async () => {
+      const { error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: {
+            // Usamos un Stripe Element en producción, aquí simplificado
+          }
         }
-      } catch (err) {
-        alert("❌ Server error: " + err.message);
+      });
+
+      if (error) {
+        alert("Payment failed: " + error.message);
+      } else {
+        alert("✅ Payment successful!");
       }
     });
   </script>
-
-  <!-- Google Maps API -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=TU_API_KEY_REAL&libraries=places&callback=initMap" async defer></script>
 </body>
 </html>
