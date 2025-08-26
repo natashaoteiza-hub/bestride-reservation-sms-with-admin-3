@@ -1,75 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bestride Admin Panel</title>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLW2JAH7IrHRloCFfaFTr1JB3DzsFPpDU&libraries=places" async defer></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    #map { height: 300px; width: 100%; margin-top: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+    }
+    header {
+      background: #343a40;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.5rem;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.2);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #007bff;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    tr:hover {
+      background: #f1f1f1;
+    }
+    .refresh-btn {
+      margin-top: 10px;
+      padding: 10px 15px;
+      background: #007bff;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .refresh-btn:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <h1>Bestride Admin Panel</h1>
+  <header>
+    📋 Bestride Admin Panel
+  </header>
 
-  <h2>Reservations</h2>
-  <table id="reservationsTable">
-    <thead>
-      <tr>
-        <th>Name</th><th>Origin</th><th>Destination</th><th>Phone</th><th>Date</th><th>Time</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="container">
+    <h2>Reservations List</h2>
+    <button class="refresh-btn" onclick="loadBookings()">🔄 Refresh</button>
 
-  <h2>Add Test Reservation</h2>
-  <form id="adminForm">
-    <input type="text" id="adminName" placeholder="Your name" required>
-    <input type="text" id="adminOrigin" placeholder="123 Main St, Charlotte" required>
-    <input type="text" id="adminDestination" placeholder="CLT Airport" required>
-    <input type="text" id="adminPhone" placeholder="+1XXXXXXXXXX" required>
-    <input type="date" id="adminDate" required>
-    <input type="time" id="adminTime" required>
-    <button type="submit">Add Reservation</button>
-  </form>
-
-  <div id="map"></div>
+    <table id="bookingsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Origin</th>
+          <th>Destination</th>
+          <th>Phone</th>
+          <th>Date</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="6">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <script>
-    let map;
-    let reservations = [];
+    async function loadBookings() {
+      const tbody = document.querySelector("#bookingsTable tbody");
+      tbody.innerHTML = "<tr><td colspan='6'>Loading...</td></tr>";
 
-    function initMap() {
-      map = new google.maps.Map(document.getElementById("map"), {
-        center: { lat: 35.2271, lng: -80.8431 },
-        zoom: 12
-      });
+      try {
+        const res = await fetch("/api/bookings");
+        const data = await res.json();
+
+        if (data.length === 0) {
+          tbody.innerHTML = "<tr><td colspan='6'>No reservations yet</td></tr>";
+          return;
+        }
+
+        tbody.innerHTML = "";
+        data.forEach(b => {
+          const row = `
+            <tr>
+              <td>${b.name}</td>
+              <td>${b.origin}</td>
+              <td>${b.destination}</td>
+              <td>${b.phone}</td>
+              <td>${b.date}</td>
+              <td>${b.time}</td>
+            </tr>
+          `;
+          tbody.insertAdjacentHTML("beforeend", row);
+        });
+      } catch (err) {
+        tbody.innerHTML = "<tr><td colspan='6'>❌ Error loading reservations</td></tr>";
+        console.error(err);
+      }
     }
 
-    window.initMap = initMap;
-
-    function addReservationToTable(reservation) {
-      const tbody = document.querySelector('#reservationsTable tbody');
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${reservation.name}</td>
-        <td>${reservation.origin}</td>
-        <td>${reservation.destination}</td>
-        <td>${reservation.phone}</td>
-        <td>${reservation.date}</td>
-        <td>${reservation.time}</td>
-      `;
-      tbody.appendChild(row);
-    }
-
-    document.getElementById('adminForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const reservation = {
-        name: document.getElementById('adminName').value,
-        origin: document.getElementById('adminOrigin').value,
-        destination: document.getElementById('adminDestination').value,
-        phone: document.getElementById('adminPhone').value,
-        date: document.getElementById('adminDate'
+    // Load bookings on page load
+    loadBookings();
+  </script>
+</body>
+</html>
