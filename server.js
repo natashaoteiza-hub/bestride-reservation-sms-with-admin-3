@@ -1,10 +1,10 @@
-import express from "express";
-import path from "path";
-import { fileURLToPath } from "url";
-import bodyParser from "body-parser";
-import fs from "fs";
-import dotenv from "dotenv";
-import Twilio from "twilio";
+import express from 'express';
+import fs from 'fs';
+import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+import Stripe from 'stripe';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -12,45 +12,48 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, 'public')));
 
-const bookingsFile = path.join(__dirname, "bookings.json");
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const bookingsFile = path.join(__dirname, 'bookings.json');
 
-const twilioClient = new Twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+app.post('/create-payment-intent', async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount,
+      currency: 'usd'
+    });
+    res.send({clientSecret: paymentIntent.client_secret});
+  } catch (err) {
+    res.status(500).json({error: err.message});
+  }
 });
 
-app.get("/admin.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
-});
-
-app.get("/api/bookings", (req, res) => {
+app.post('/api/bookings', (req, res) => {
+  const booking = req.body;
   let bookings = [];
   if (fs.existsSync(bookingsFile)) {
-    bookings = JSON.parse(fs.readFileSync(bookingsFile, "utf-8"));
+    bookings = JSON.parse(fs.readFileSync(bookingsFile));
+  }
+  bookings.push(booking);
+  fs.writeFileSync(bookingsFile, JSON.stringify(bookings, null, 2));
+  res.json({success:true});
+});
+
+app.get('/api/bookings', (req, res) => {
+  let bookings = [];
+  if (fs.existsSync(bookingsFile)) {
+    bookings = JSON.parse(fs.readFileSync(bookingsFile));
   }
   res.json(bookings);
 });
 
-app.post("/api/bookings", async (req, res) => {
-  try {
-    const { name, origin, destination, phone, date, time } = req.body;
-    if (!name || !origin || !destination || !phone || !date || !time)
-      return res.status(400).json({ error: "All fields are required" });
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
 
-    const newBooking = { name, origin, destination, phone, date, time };
-    let bookings = [];
-    if (fs.existsSync(bookingsFile)) {
-      bookings = JSON.parse(fs.readFileSync(bookingsFile, "utf-8"));
-    }
-    bookings.push(newBooking);
-    fs.writeFileSync(bookingsFile, JSON.stringify(bookings, null, 2));
-
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
