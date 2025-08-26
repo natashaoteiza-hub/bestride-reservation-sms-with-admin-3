@@ -3,31 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <title>Bestride Admin Panel</title>
+  <style>
+    table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    form { max-width: 400px; margin: 20px auto; }
+    input, button { width: 100%; padding: 8px; margin: 5px 0; }
+    #map { height: 300px; width: 100%; margin-top: 10px; }
+  </style>
 </head>
 <body>
   <h1>Bestride Admin Panel</h1>
-  <table border="1">
+
+  <h2>Reservations</h2>
+  <table id="bookingsTable">
     <thead>
       <tr>
-        <th>Name</th><th>Origin</th><th>Destination</th><th>Phone</th><th>Date</th><th>Time</th>
+        <th>Name</th>
+        <th>Origin</th>
+        <th>Destination</th>
+        <th>Phone</th>
+        <th>Date</th>
+        <th>Time</th>
       </tr>
     </thead>
-    <tbody id="bookingsTable"></tbody>
+    <tbody></tbody>
   </table>
 
+  <h2>Add Test Reservation</h2>
+  <form id="adminForm">
+    <input type="text" id="adminName" placeholder="Your name" required />
+    <input type="text" id="adminOrigin" placeholder="Origin" required />
+    <input type="text" id="adminDestination" placeholder="Destination" required />
+    <input type="tel" id="adminPhone" placeholder="+1XXXXXXXXXX" required />
+    <input type="date" id="adminDate" required />
+    <input type="time" id="adminTime" required />
+    <button type="submit">Add Reservation</button>
+  </form>
+
+  <div id="map"></div>
+
+  <script src="https://maps.googleapis.com/maps/api/js?key=AlzaSyDLW2JAH7lrHRLoCFfaFTr1JB3DzsFPpDU&libraries=places"></script>
   <script>
-    async function loadBookings() {
-      const res = await fetch('/api/bookings');
-      const bookings = await res.json();
-      const tbody = document.getElementById('bookingsTable');
-      tbody.innerHTML = '';
-      bookings.forEach(b => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${b.name}</td><td>${b.origin}</td><td>${b.destination}</td><td>${b.phone}</td><td>${b.date}</td><td>${b.time}</td>`;
-        tbody.appendChild(tr);
+    let map, originAutocomplete, destinationAutocomplete;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 35.2271, lng: -80.8431 },
+        zoom: 12
       });
+      originAutocomplete = new google.maps.places.Autocomplete(document.getElementById("adminOrigin"));
+      destinationAutocomplete = new google.maps.places.Autocomplete(document.getElementById("adminDestination"));
     }
-    loadBookings();
+
+    async function loadBookings() {
+      try {
+        const res = await fetch("/api/bookings");
+        const bookings = await res.json();
+        const tbody = document.querySelector("#bookingsTable tbody");
+        tbody.innerHTML = "";
+        bookings.forEach(b => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${b.name}</td>
+            <td>${b.origin}</td>
+            <td>${b.destination}</td>
+            <td>${b.phone}</td>
+            <td>${b.date}</td>
+            <td>${b.time}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    document.getElementById("adminForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("adminName").value,
+        origin: document.getElementById("adminOrigin").value,
+        destination: document.getElementById("adminDestination").value,
+        phone: document.getElementById("adminPhone").value,
+        date: document.getElementById("adminDate").value,
+        time: document.getElementById("adminTime").value
+      };
+      try {
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.success) {
+          alert("Booking added!");
+          loadBookings();
+          document.getElementById("adminForm").reset();
+        } else {
+          alert("Error: " + result.error);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    });
+
+    window.onload = () => {
+      initMap();
+      loadBookings();
+    };
   </script>
 </body>
+</html>
+
 </html>
